@@ -1,22 +1,11 @@
 """
-Purpose: Comprehensive demo of interpolation and fitting methods for mathematical modeling.
-         Covers polynomial fitting (overfitting demo), cubic spline interpolation,
-         nonlinear curve_fit, and a real-case experimental data fitting example.
-
-Input:  No external input; synthetic/example data is generated inside the script.
-Output: Console output with key numerical results and a 2x2 figure saved to PNG.
-        Figure path: D:/虚拟C盘/数学建模培训/output/interpolation_result.png
-
-Usage:  python interpolation_demo.py
-        Requires: numpy, scipy, matplotlib (Agg backend)
-
-Author: Programming Lead / Math Modeling Team
+用途: 插值与拟合方法综合演示 (多项式拟合、样条插值、非线性拟合、应力-应变实例)
+输入: 无（内置合成数据）
+输出: 控制台结果 + output/interpolation_result.png
+调用: python interpolation_demo.py
 """
 
 import os
-
-os.environ["MPLBACKEND"] = "Agg"
-
 import numpy as np
 from scipy.interpolate import CubicSpline
 from scipy.optimize import curve_fit
@@ -24,7 +13,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# ========== Style settings ==========
+# 绘图样式设置
 plt.rcParams.update({
     "figure.dpi": 150,
     "font.size": 10,
@@ -32,19 +21,15 @@ plt.rcParams.update({
     "axes.labelsize": 10,
 })
 
-OUTPUT_PATH = "D:/虚拟C盘/数学建模培训/output/interpolation_result.png"
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'output')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+OUTPUT_PATH = os.path.join(OUTPUT_DIR, "interpolation_result.png")
 np.random.seed(42)
 
 
-# ====================================================================
-# Section 1: Polynomial fitting and the overfitting problem
-# ====================================================================
+# 1. 多项式拟合与过拟合
 def section_1_polynomial_overfitting():
-    """
-    Demonstrate polynomial fitting with the Runge function
-    f(x) = 1 / (1 + 25*x^2) on [-1, 1].
-    Low-degree (5) fits reasonably; high-degree (15) overfits badly.
-    """
+    """Runge 函数 f(x)=1/(1+25x^2) 的多项式拟合，演示低阶合理/高阶过拟合"""
     print("=" * 65)
     print("SECTION 1: Polynomial Fitting & Overfitting (Runge Phenomenon)")
     print("=" * 65)
@@ -55,7 +40,7 @@ def section_1_polynomial_overfitting():
     x_fine = np.linspace(-1, 1, 500)
     y_true = runge(x_fine)
 
-    # --- Low-degree fit: 5 data points, degree 4 ---
+    # 低阶拟合 (5点, 4次)
     x_pts_low = np.linspace(-1, 1, 5)
     y_pts_low = runge(x_pts_low)
     coeff_low = np.polyfit(x_pts_low, y_pts_low, deg=4)
@@ -63,7 +48,7 @@ def section_1_polynomial_overfitting():
     err_low = np.max(np.abs(y_fit_low - y_true))
     print(f"  Degree-4 fit (5 points):  max error = {err_low:.4f}")
 
-    # --- Medium-degree fit: 10 data points, degree 9 ---
+    # 中阶拟合 (10点, 9次)
     x_pts_mid = np.linspace(-1, 1, 10)
     y_pts_mid = runge(x_pts_mid)
     coeff_mid = np.polyfit(x_pts_mid, y_pts_mid, deg=9)
@@ -71,7 +56,7 @@ def section_1_polynomial_overfitting():
     err_mid = np.max(np.abs(y_fit_mid - y_true))
     print(f"  Degree-9 fit (10 points): max error = {err_mid:.4f}")
 
-    # --- Severe overfit: 16 data points, degree 15 ---
+    # 高阶过拟合 (16点, 15次)
     x_pts_high = np.linspace(-1, 1, 16)
     y_pts_high = runge(x_pts_high)
     coeff_high = np.polyfit(x_pts_high, y_pts_high, deg=15)
@@ -85,36 +70,31 @@ def section_1_polynomial_overfitting():
                             x_pts_high, y_pts_high, y_fit_high)
 
 
-# ====================================================================
-# Section 2: Cubic spline interpolation
-# ====================================================================
+# 2. 三次样条插值
 def section_2_cubic_spline():
-    """
-    Cubic spline interpolation on temperature-vs-time data.
-    Compare 'natural' and 'not-a-knot' boundary conditions.
-    """
+    """对温度-时间数据进行三次样条插值，比较 natural 与 not-a-knot 边界条件"""
     print("=" * 65)
     print("SECTION 2: Cubic Spline Interpolation")
     print("=" * 65)
 
-    # Simulated temperature data (every 2 hours)
+    # 模拟每2小时的温度数据
     hours = np.array([0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24])
     temp = np.array([15.2, 14.8, 14.5, 16.1, 18.5, 21.3, 23.8,
                      24.5, 23.9, 21.2, 18.6, 16.5, 15.0])
 
-    # Create splines with different boundary conditions
+    # 创建不同边界条件的样条
     cs_natural = CubicSpline(hours, temp, bc_type="natural")
     cs_notaknot = CubicSpline(hours, temp, bc_type="not-a-knot")
 
-    # Fine grid for plotting (every 0.1 hour)
+    # 细网格用于绘图
     hours_fine = np.linspace(0, 24, 241)
     temp_natural = cs_natural(hours_fine)
     temp_notaknot = cs_notaknot(hours_fine)
 
-    # First derivative (temperature rate of change)
+    # 一阶导数（温度变化率）
     temp_rate = cs_natural(hours_fine, nu=1)
 
-    # Find the time of maximum temperature
+    # 寻找最高温度时刻
     from scipy.optimize import minimize_scalar
     res = minimize_scalar(lambda t: -cs_natural(t), bounds=(0, 24), method="bounded")
     print(f"  Max temperature:  T = {-res.fun:.2f} C  at  t = {res.x:.2f} h")
@@ -124,23 +104,18 @@ def section_2_cubic_spline():
     return (hours, temp, hours_fine, temp_natural, temp_notaknot, temp_rate, cs_natural)
 
 
-# ====================================================================
-# Section 3: Nonlinear curve fitting (curve_fit)
-# ====================================================================
+# 3. 非线性曲线拟合
 def section_3_nonlinear_curve_fit():
-    """
-    Nonlinear least-squares fitting with curve_fit.
-    Example: Drug concentration decay follows an exponential model.
-    """
+    """药物浓度衰减数据的非线性最小二乘拟合（指数模型）"""
     print("=" * 65)
     print("SECTION 3: Nonlinear Curve Fitting (curve_fit)")
     print("=" * 65)
 
-    # Simulated drug concentration data
+    # 模拟药物浓度数据
     t = np.array([0, 1, 2, 3, 4, 5, 6, 8, 10, 12])
     conc = np.array([100, 62, 40, 26, 18, 13, 10, 6.5, 4.5, 3.5])
 
-    # Model 1: Exponential decay  C(t) = C0 * exp(-k * t)
+    # 模型1: 指数衰减 C(t) = C0 * exp(-k * t)
     def exp_decay(t, C0, k):
         return C0 * np.exp(-k * t)
 
@@ -161,7 +136,7 @@ def section_3_nonlinear_curve_fit():
     print(f"    Half-life = {half_life:.2f} h")
     print(f"    R^2 = {r2_1:.4f},  RMSE = {rmse_1:.4f}")
 
-    # Model 2: Exponential decay with offset  C(t) = C0 * exp(-k * t) + b
+    # 模型2: 带偏移的指数衰减 C(t) = C0 * exp(-k * t) + b
     def exp_decay_offset(t, C0, k, b):
         return C0 * np.exp(-k * t) + b
 
@@ -174,7 +149,7 @@ def section_3_nonlinear_curve_fit():
     print(f"    C0 = {popt2[0]:.2f},  k = {popt2[1]:.4f},  b = {popt2[2]:.4f}")
     print(f"    R^2 = {r2_2:.4f},  RMSE = {rmse_2:.4f}")
 
-    # Prediction on fine grid for plotting
+    # 细网格预测值用于绘图
     t_fine = np.linspace(0, 12, 100)
     c_fine1 = exp_decay(t_fine, *popt1)
     c_fine2 = exp_decay_offset(t_fine, *popt2)
@@ -183,24 +158,19 @@ def section_3_nonlinear_curve_fit():
     return t, conc, t_fine, c_fine1, c_fine2
 
 
-# ====================================================================
-# Section 4: Real-case example — fitting experimental stress-strain data
-# ====================================================================
+# 4. 实际案例：材料应力-应变曲线拟合
 def section_4_real_case():
-    """
-    Real-case example: material stress-strain curve fitting.
-    Compare quadratic, power-law, and exponential-offset models.
-    """
+    """对比二次、幂律、指数偏移三种模型拟合实验应力-应变数据"""
     print("=" * 65)
     print("SECTION 4: Real-Case Example - Stress-Strain Curve Fitting")
     print("=" * 65)
 
-    # Experimental data: stress (MPa) vs. strain (%)
+    # 实验数据：应力 (MPa) 与应变 (%)
     stress = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
     strain = np.array([0.00, 0.03, 0.08, 0.15, 0.24, 0.36,
                        0.50, 0.68, 0.88, 1.12, 1.40])
 
-    # --- Model 1: Quadratic polynomial  y = a*x^2 + b*x + c ---
+    # 模型1: 二次多项式 y = a*x^2 + b*x + c
     coeff_quad = np.polyfit(stress, strain, deg=2)
     strain_quad = np.polyval(coeff_quad, stress)
     ss_res_q = np.sum((strain - strain_quad)**2)
@@ -210,12 +180,12 @@ def section_4_real_case():
     print(f"  Model 1 - Quadratic:  y = {coeff_quad[0]:.6f} x^2 + {coeff_quad[1]:.6f} x + {coeff_quad[2]:.6f}")
     print(f"    R^2 = {r2_q:.4f},  RMSE = {rmse_q:.4f}")
 
-    # --- Model 2: Power law  y = a * x^b ---
+    # 模型2: 幂律 y = a * x^b
     def power_law(x, a, b):
         return a * x**b
 
     popt_pl, _ = curve_fit(power_law, stress[1:], strain[1:], p0=[0.001, 1.5])
-    # exclude stress=0 point for power law (log issue)
+    # 排除应力为0的点以避免对数问题
     strain_pl = np.zeros_like(stress)
     strain_pl[1:] = power_law(stress[1:], *popt_pl)
     ss_res_pl = np.sum((strain - strain_pl)**2)
@@ -224,7 +194,7 @@ def section_4_real_case():
     print(f"  Model 2 - Power law:  y = {popt_pl[0]:.6f} * x^{popt_pl[1]:.4f}")
     print(f"    R^2 = {r2_pl:.4f},  RMSE = {rmse_pl:.4f}")
 
-    # --- Model 3: Exponential offset  y = a * (exp(b*x) - 1) ---
+    # 模型3: 指数偏移 y = a * (exp(b*x) - 1)
     def exp_off(x, a, b):
         return a * (np.exp(b * x) - 1)
 
@@ -236,14 +206,14 @@ def section_4_real_case():
     print(f"  Model 3 - Exponential off.:  y = {popt_eo[0]:.4f} * (exp({popt_eo[1]:.4f} * x) - 1)")
     print(f"    R^2 = {r2_eo:.4f},  RMSE = {rmse_eo:.4f}")
 
-    # Fine grid for smooth curves
+    # 细网格用于绘制平滑曲线
     stress_fine = np.linspace(0, 100, 200)
     strain_fine_q = np.polyval(coeff_quad, stress_fine)
     strain_fine_pl = np.zeros_like(stress_fine)
     strain_fine_pl[1:] = power_law(stress_fine[1:], *popt_pl)
     strain_fine_eo = exp_off(stress_fine, *popt_eo)
 
-    # Identify the best model
+    # 选出最佳模型
     models_r2 = {"Quadratic": r2_q, "Power law": r2_pl, "Exp. offset": r2_eo}
     best = max(models_r2, key=models_r2.get)
     print(f"\n  >>> Best model (by R^2): {best}  (R^2 = {models_r2[best]:.4f})")
@@ -255,9 +225,7 @@ def section_4_real_case():
             strain_quad, strain_pl, strain_eo)
 
 
-# ====================================================================
-# Main: run all sections and create the composite figure
-# ====================================================================
+# 主程序
 def main():
     print("=" * 65)
     print("  INTERPOLATION & FITTING DEMO")
@@ -265,13 +233,12 @@ def main():
     print("=" * 65)
     print()
 
-    # Run all four sections
     res1 = section_1_polynomial_overfitting()
     res2 = section_2_cubic_spline()
     res3 = section_3_nonlinear_curve_fit()
     res4 = section_4_real_case()
 
-    # Unpack results
+    # 解包结果
     (x_fine, y_true,
      (x_low, y_low, y_fit_low,
       x_mid, y_mid, y_fit_mid,
@@ -284,10 +251,10 @@ def main():
      coeff_q, popt_pl, popt_eo,
      strain_quad_pts, strain_pl_pts, strain_eo_pts) = res4
 
-    # ========== Build 2x2 figure ==========
+    # 2x2 子图
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
-    # ---- Panel A: Polynomial overfitting ----
+    # Panel A: 多项式过拟合
     ax = axes[0, 0]
     ax.plot(x_fine, y_true, "k-", linewidth=2, label="True f(x)")
     ax.plot(x_fine, y_fit_low, "b--", linewidth=1.5, label="Degree 4 (5 pts)")
@@ -302,7 +269,7 @@ def main():
     ax.legend(fontsize=8)
     ax.grid(alpha=0.3)
 
-    # ---- Panel B: Cubic spline interpolation ----
+    # Panel B: 三次样条插值
     ax = axes[0, 1]
     ax.plot(hours, temp, "ro", markersize=6, label="Measured data")
     ax.plot(hours_fine, temp_natural, "b-", linewidth=2, label="Natural spline")
@@ -313,13 +280,13 @@ def main():
     ax.legend(fontsize=8)
     ax.grid(alpha=0.3)
 
-    # Inset: first derivative
+    # 内嵌一阶导数
     ax_twin = ax.twinx()
     ax_twin.plot(hours_fine, temp_rate, "k:", linewidth=1, alpha=0.6)
     ax_twin.set_ylabel("dT/dt (C/h)", color="gray", fontsize=8)
     ax_twin.tick_params(colors="gray", labelsize=7)
 
-    # ---- Panel C: Nonlinear curve_fit ----
+    # Panel C: 非线性曲线拟合
     ax = axes[1, 0]
     ax.scatter(t_drug, conc_drug, c="red", s=40, label="Measured conc.")
     ax.plot(t_fine_drug, c_fine1, "b-", linewidth=2, label="Exp decay")
@@ -330,10 +297,10 @@ def main():
     ax.legend(fontsize=8)
     ax.grid(alpha=0.3)
 
-    # ---- Panel D: Real-case stress-strain fitting ----
+    # Panel D: 实际应力-应变拟合
     ax = axes[1, 1]
 
-    # Pre-compute R^2 values for clean labels
+    # 预计算 R^2 用于标注
     ss_tot_d = np.sum((strain - np.mean(strain))**2)
     r2_q_d = 1 - np.sum((strain - strain_quad_pts)**2) / ss_tot_d
     r2_pl_d = 1 - np.sum((strain - strain_pl_pts)**2) / ss_tot_d

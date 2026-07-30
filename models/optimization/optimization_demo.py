@@ -1,21 +1,22 @@
 """
-用途: 线性规划与整数规划模型演示
-  - 生产计划 LP (scipy)
-  - 0-1 整数规划 暴力枚举
-  - 钢管下料 贪心+枚举
+用途: 线性规划与整数规划模型演示 (LP, 0-1 IP, MIP)
 输入: 内置案例数据
 输出: 控制台结果 + output/optimization_result.png
 调用: python models/optimization/optimization_demo.py
 """
+import os
 import sys
-sys.path.insert(0, 'D:/虚拟C盘/数学建模培训')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import linprog
 
-# ====== 案例1: 生产计划 LP ======
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'output')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# 案例1: 生产计划 LP
 print("=" * 50)
 print("案例1: 生产计划线性规划 (LP)")
 print("=" * 50)
@@ -31,7 +32,7 @@ print(f"  最大利润: {-res.fun:.2f}元")
 print(f"  机器利用率: {(1*res.x[0]+2*res.x[1])/8*100:.0f}%")
 print(f"  人工利用率: {(2*res.x[0]+1*res.x[1])/10*100:.0f}%")
 
-# ====== 案例2: 0-1 整数规划 (暴力枚举 2^4 = 16种) ======
+# 案例2: 0-1 整数规划 (枚举法)
 print("\n" + "=" * 50)
 print("案例2: 投资项目选择 (0-1 IP, 枚举法)")
 print("=" * 50)
@@ -58,7 +59,7 @@ print(f"  总投入: {sum(invest[i-1] for i in selected)}万")
 print(f"  总收益: {best_val}万")
 print(f"  资金利用率: {sum(invest[i-1] for i in selected)}/{budget} = {sum(invest[i-1] for i in selected)/budget*100:.0f}%")
 
-# ====== 案例3: 钢管下料 (枚举模式+LP) ======
+# 案例3: 钢管下料
 print("\n" + "=" * 50)
 print("案例3: 钢管下料问题 (MIP)")
 print("=" * 50)
@@ -71,8 +72,8 @@ for a in range(int(raw_len / 2.5) + 1):
             waste = raw_len - a * 2.5 - b * 1.6
             patterns.append((a, b, waste))
 
-# MILP via scipy (variable bounds = integer)
-c_mip = np.ones(len(patterns))  # minimize sum x_i
+# scipy MILP 求解
+c_mip = np.ones(len(patterns))
 A_ub = np.zeros((2, len(patterns)))
 A_ub[0] = [-p[0] for p in patterns]
 A_ub[1] = [-p[1] for p in patterns]
@@ -95,10 +96,10 @@ for i, xi in enumerate(x_mip):
         total_16 += b * int(xi)
 print(f"  实际产出: 2.5m x {total_25}根, 1.6m x {total_16}根")
 
-# ====== 可视化: 三图合一 ======
+# 可视化: 三图合一
 fig, axes = plt.subplots(1, 3, figsize=(14, 4.5))
 
-# LP: 可行域
+# LP 可行域
 ax = axes[0]
 x1_vals = np.linspace(0, 8, 100)
 c1 = (8 - x1_vals) / 2
@@ -113,7 +114,7 @@ ax.set_xlabel('Product A'); ax.set_ylabel('Product B')
 ax.set_xlim(0, 9); ax.set_ylim(0, 9)
 ax.set_title('Case 1: Production LP'); ax.legend(fontsize=8); ax.grid(True, alpha=0.3)
 
-# 0-1 IP: 投资组合
+# 0-1 IP 投资组合
 ax = axes[1]
 projects = ['P1\n200', 'P2\n150', 'P3\n180', 'P4\n100']
 colors_ip = ['#2ecc71' if best_sel[i] else '#e74c3c' for i in range(4)]
@@ -125,7 +126,7 @@ ax.axhline(y=budget, color='gray', linestyle='--', label=f'Budget:{budget}')
 ax.set_ylabel('Investment'); ax.set_title('Case 2: 0-1 IP Project Selection')
 ax.legend(fontsize=8); ax.set_ylim(0, 300)
 
-# MIP: 下料方案
+# MIP 下料方案
 ax = axes[2]
 used = [(a, b, int(xi)) for i, (a, b, w) in enumerate(patterns) if x_mip[i] > 0.5]
 labels_mip = [f'{a}x2.5m\n{b}x1.6m' for a, b, _ in used]
@@ -136,6 +137,6 @@ ax.pie(counts, labels=labels_mip, autopct='%d pipes',
 ax.set_title(f'Case 3: Cutting Stock ({total_pipes} pipes)')
 
 plt.tight_layout()
-plt.savefig('D:/虚拟C盘/数学建模培训/output/optimization_result.png',
+plt.savefig(os.path.join(OUTPUT_DIR, 'optimization_result.png'),
             dpi=300, bbox_inches='tight')
 print("\n[OK] output/optimization_result.png")

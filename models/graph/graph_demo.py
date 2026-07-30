@@ -4,15 +4,19 @@
 输出: 控制台结果 + output/graph_result.png
 调用: python models/graph/graph_demo.py
 """
+import os
 import sys
-sys.path.insert(0, 'D:/虚拟C盘/数学建模培训')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-# ====== Case 1: Shortest Path ======
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'output')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# 案例1: 最短路
 print("=" * 50)
 print("Case 1: Dijkstra Shortest Path - Supply Distribution")
 print("=" * 50)
@@ -32,7 +36,7 @@ for node in sorted(dists.keys(), key=lambda n: dists[n]):
     if node != 'Center':
         print(f"  Center -> {node}: dist={dists[node]}, path={'->'.join(paths[node])}")
 
-# ====== Case 2: MST ======
+# 案例2: 最小生成树
 print("\n" + "=" * 50)
 print("Case 2: Kruskal MST - Fiber Optic Layout")
 print("=" * 50)
@@ -48,7 +52,7 @@ print(f"  MST total cost: {total_mst}")
 for u, v, d in mst.edges(data=True):
     print(f"  {u} -- {v}: cost={d['weight']}")
 
-# ====== Case 3: Max Flow ======
+# 案例3: 最大流
 print("\n" + "=" * 50)
 print("Case 3: Dinic Max Flow - Water Supply Network")
 print("=" * 50)
@@ -67,7 +71,7 @@ for u in flow_dict:
         if f > 0:
             print(f"  {u} -> {v}: {f}/{G3[u][v]['capacity']} m^3/h")
 
-# ====== Case 4: Bipartite Matching ======
+# 案例4: 二分图匹配
 print("\n" + "=" * 50)
 print("Case 4: Bipartite Matching - Task Assignment")
 print("=" * 50)
@@ -87,10 +91,10 @@ for w in workers:
     if w in matching:
         print(f"  {w} -> {matching[w]}")
 
-# ====== Visualization ======
+# 可视化
 fig, axes = plt.subplots(2, 2, figsize=(13, 11))
 
-# Shortest Path
+# 最短路子图
 ax = axes[0, 0]
 pos1 = nx.spring_layout(G1, seed=42)
 nx.draw(G1, pos1, ax=ax, with_labels=True, node_color='lightblue',
@@ -99,7 +103,7 @@ nx.draw_networkx_edge_labels(G1, pos1,
     edge_labels=nx.get_edge_attributes(G1, 'weight'), ax=ax, font_size=7)
 ax.set_title('Case 1: Shortest Path Network')
 
-# MST
+# MST子图
 ax = axes[0, 1]
 pos2 = nx.spring_layout(G2, seed=42)
 nx.draw(G2, pos2, ax=ax, with_labels=True, node_color='lightgray',
@@ -110,7 +114,7 @@ nx.draw_networkx_edge_labels(mst, pos2,
     edge_labels=nx.get_edge_attributes(mst, 'weight'), ax=ax, font_size=7)
 ax.set_title(f'Case 2: MST (total cost={total_mst})')
 
-# Max Flow
+# 最大流子图
 ax = axes[1, 0]
 pos3 = nx.spring_layout(G3, seed=42)
 nx.draw(G3, pos3, ax=ax, with_labels=True, node_color='lightyellow',
@@ -121,7 +125,7 @@ flow_labels = {(u,v): f"{f}/{G3[u][v]['capacity']}"
 nx.draw_networkx_edge_labels(G3, pos3, edge_labels=flow_labels, ax=ax, font_size=7)
 ax.set_title(f'Case 3: Max Flow ({flow_val} m^3/h)')
 
-# Bipartite Matching
+# 二分图匹配子图
 ax = axes[1, 1]
 pos_b = {}
 for i, w in enumerate(workers):
@@ -138,6 +142,6 @@ ax.set_title(f'Case 4: Bipartite Matching ({len(matching)//2} pairs)')
 ax.set_xlim(-0.5, 1.5)
 
 plt.tight_layout()
-plt.savefig('D:/虚拟C盘/数学建模培训/output/graph_result.png',
+plt.savefig(os.path.join(OUTPUT_DIR, 'graph_result.png'),
             dpi=300, bbox_inches='tight')
 print("\n[OK] output/graph_result.png")
