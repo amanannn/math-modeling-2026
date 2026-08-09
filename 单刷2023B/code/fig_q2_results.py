@@ -8,6 +8,8 @@ from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.colors import Normalize
 from scipy.interpolate import griddata
 
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei']
@@ -84,3 +86,35 @@ ax2.set_title('(b) 覆盖宽度热力图', fontsize=12)
 plt.tight_layout()
 plt.savefig(FIG / 'fig_q2_combined.png', dpi=300, bbox_inches='tight')
 plt.close(fig)
+
+# ===== 图: β 剖面曲线族 (W vs L, 渐变色标) =====
+betas_prof = np.arange(0, 91, 15)          # 0,15,...,90 按公式重算
+Wp = np.zeros((len(betas_prof), len(L_NM)))
+for i, b in enumerate(betas_prof):
+    cb, sb = np.cos(np.deg2rad(b)), np.sin(np.deg2rad(b))
+    tap = ta * abs(sb)
+    Wp[i] = (H0 - L_NM * NM * ta * cb) * (1 / (t30 + tap) + 1 / (t30 - tap))
+
+fig, ax = plt.subplots(figsize=(9, 5.5))
+cmap = plt.cm.coolwarm
+norm = Normalize(0, 90)
+for i, b in enumerate(betas_prof):
+    ax.plot(L_NM, Wp[i], 'o-', color=cmap(norm(b)),
+            lw=3 if b == 90 else 1.6, ms=6 if b == 90 else 4)
+ax.fill_between(L_NM, Wp[0], Wp[-1], color='#2e86ab', alpha=0.06)
+ax.annotate('β=90°(沿等深线):\nW 恒定且最大', xy=(1.05, 418),
+            xytext=(0.75, 490),
+            arrowprops=dict(arrowstyle='->', color='#c0392b'),
+            fontsize=11, color='#c0392b', fontweight='bold')
+ax.set_xlabel('距中心点距离 L (海里)')
+ax.set_ylabel('覆盖宽度 W (m)')
+ax.set_title('不同测线方向 β 的 W(L) 剖面族')
+mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
+mappable.set_array([])
+cbar = fig.colorbar(mappable, ax=ax, pad=0.02)
+cbar.set_label('测线方向 β (°)')
+ax.grid(True, alpha=0.3, ls='--')
+plt.tight_layout()
+plt.savefig(FIG / 'fig_q2_profile.png', dpi=300, bbox_inches='tight')
+plt.close(fig)
+print(f'[OK] {FIG / "fig_q2_profile.png"}')

@@ -65,3 +65,31 @@ plt.tight_layout()
 plt.savefig(FIG / 'fig_q4_pws.png', dpi=300, bbox_inches='tight')
 plt.close(fig)
 print(f'[OK] fig_q4_pws.png ({len(l_pws)}条)')
+
+# ===== 图3: 地形特征 (水深色图+等深线 / 等深线方向分布) =====
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.5, 5.5),
+                               gridspec_kw={'width_ratios': [1.6, 1]})
+im = ax1.imshow(q.H, origin='lower', extent=[0, 4, 0, 5], cmap='jet_r',
+                aspect='auto')
+Xs, Ys = np.meshgrid(np.arange(q.NX) * 0.02, np.arange(q.NY) * 0.02)
+cs = ax1.contour(Xs, Ys, q.H, levels=15, colors='k', linewidths=0.4,
+                 alpha=0.5)
+ax1.clabel(cs, inline=True, fontsize=7, fmt='%.0f')
+ax1.set_xlabel('东西 (海里)')
+ax1.set_ylabel('南北 (海里)')
+ax1.set_title('水深分布与等深线')
+cbar = fig.colorbar(im, ax=ax1, pad=0.02)
+cbar.set_label('水深 (m)')
+
+th = np.degrees(q.THETA_ISO).ravel()
+ax2.hist(th, bins=18, range=(0, 180), color='#5fa8d3', edgecolor='w')
+ax2.axvline(88.4, color='#c0392b', ls='--', lw=1.2)
+ax2.text(93, ax2.get_ylim()[1] * 0.9, '均值 88.4°\nσ=50.6°',
+         color='#c0392b', fontsize=10)
+ax2.set_xlabel('等深线方向 (°)')
+ax2.set_ylabel('网格点数')
+ax2.set_title('等深线方向分布 (丘陵地形)')
+plt.tight_layout()
+plt.savefig(FIG / 'fig_q4_terrain.png', dpi=300, bbox_inches='tight')
+plt.close(fig)
+print(f'[OK] fig_q4_terrain.png')

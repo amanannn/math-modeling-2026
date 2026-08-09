@@ -82,3 +82,40 @@ ax.set_aspect('auto')
 plt.savefig(FIG / 'fig_q1_coverage_overview.png', dpi=300,
             bbox_inches='tight')
 plt.close(fig)
+
+# ============================================================
+# 图2: W 与重叠率趋势 (双轴单图)
+# ============================================================
+eta = np.full_like(W, np.nan)
+for i in range(1, len(W)):
+    eta[i] = 1 - d / W[i]      # 瓶颈口径: 相邻两条中较浅者
+
+fig, ax1 = plt.subplots(figsize=(9, 5.5))
+ax1.plot(x_lines, W, 'o-', color='#2e86ab', lw=2, ms=7, label='覆盖宽度 W')
+ax1.axhline(d, color='#c0392b', ls='--', lw=1.5, label='测线间距 d=200m')
+ax1.fill_between(x_lines, d, W, where=(W > d), color='#2e86ab', alpha=0.15)
+ax1.set_xlabel('测线距中心点距离 (m)')
+ax1.set_ylabel('覆盖宽度 W (m)', color='#2e86ab')
+ax1.tick_params(axis='y', labelcolor='#2e86ab')
+ax1.grid(True, alpha=0.3, ls='--')
+
+ax2 = ax1.twinx()
+ax2.plot(x_lines[1:], eta[1:] * 100, 's-', color='#e67e22', lw=2, ms=6,
+         label='与前一条重叠率 η')
+ax2.axhline(0, color='gray', lw=1)
+ax2.set_ylabel('与前一条测线重叠率 η (%)', color='#e67e22')
+ax2.tick_params(axis='y', labelcolor='#e67e22')
+ax2.set_ylim(-45, 70)
+
+ax1.annotate('重叠: W > d', xy=(350, 260), fontsize=11, color='#2e86ab')
+ax1.annotate('空隙: W < d', xy=(690, 130), fontsize=11, color='#c0392b')
+ax1.annotate('η 由正转负', xy=(600, -30), fontsize=10, color='#e67e22')
+
+h1, l1 = ax1.get_legend_handles_labels()
+h2, l2 = ax2.get_legend_handles_labels()
+ax1.legend(h1 + h2, l1 + l2, loc='upper right', fontsize=9)
+
+plt.tight_layout()
+plt.savefig(FIG / 'fig_q1_trend.png', dpi=300, bbox_inches='tight')
+plt.close(fig)
+print(f'[OK] {FIG / "fig_q1_trend.png"}')

@@ -11,12 +11,46 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib import cm
 
-from solve_q3 import layout_west, width, XW, XE, W_NS, H0, ta
+from solve_q3 import (layout_west, simulate_beta, width,
+                      XW, XE, W_NS, H0, ta)
 
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei']
 plt.rcParams['axes.unicode_minus'] = False
 
 FIG = Path(__file__).resolve().parent.parent / 'fig'
+
+
+# ===== 图: β 方向扫描 (0~90°, 对称性裁剪) =====
+betas = np.arange(0, 91, 15)              # 测线无方向, β与180°-β等价
+l90 = simulate_beta(90)
+rels = np.array([simulate_beta(b) / l90 for b in betas])
+
+fig, ax = plt.subplots(figsize=(9, 5.5))
+ax.plot(betas, rels, 'o-', color='#2e86ab', lw=2, ms=7)
+ax.axvspan(85, 90, color='#c0392b', alpha=0.08)      # 最优区间高亮
+ax.axvline(90, color='#c0392b', ls='--', lw=1.2)
+for b, r in zip(betas, rels):
+    if b == 0:
+        ax.annotate(f'×{r:.2f}', xy=(b, r), xytext=(6, r - 0.35),
+                    fontsize=11, color='#1f4e79', fontweight='bold')
+    elif b == 90:
+        ax.annotate(f'×{r:.2f}', xy=(b, r), xytext=(b - 22, r + 0.15),
+                    fontsize=11, color='#1f4e79', fontweight='bold')
+    elif b in (30, 45, 60):
+        ax.annotate(f'×{r:.2f}', xy=(b, r), xytext=(b + 3, r - 0.25),
+                    fontsize=10, color='#1f4e79')
+ax.text(20, rels.max() * 0.9, '垂直等深线', ha='center', fontsize=10,
+        color='#888')
+ax.text(90, rels.max() * 0.7, '沿等深线', ha='right', fontsize=10,
+        color='#c0392b')
+ax.set_xlabel('测线方向夹角 (度)')
+ax.set_ylabel('相对测线总长 (90度方向为 1.00)')
+ax.set_title('测线总长随方向角单调递减, 90度方向最短')
+ax.grid(True, alpha=0.3, ls='--')
+plt.tight_layout()
+plt.savefig(FIG / 'fig_q3_beta_scan.png', dpi=300, bbox_inches='tight')
+plt.close(fig)
+print(f'[OK] fig_q3_beta_scan.png  β=0:×{rels[0]:.2f} β=90:×{rels[-1]:.2f}')
 
 
 # ===== 彩色海底 + 蛇形航线 =====
