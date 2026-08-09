@@ -1,7 +1,7 @@
 """
 2023B第二问 结果可视化 (数据类)
-图1: W(L,β) 三维曲面; 图2: W(L,β) 热力图; 图3: 合成图(左曲面+右热力图)
-输出: ../fig/fig_q2_surface.png, ../fig/fig_q2_heatmap.png, ../fig/fig_q2_combined.png
+图: 合成图(左W(L,β)三维曲面 + 右热力图)
+输出: ../fig/fig_q2_combined.png
 用法: python fig_q2_results.py
 """
 from pathlib import Path
@@ -68,25 +68,6 @@ def draw_heatmap(ax, fs=11):
     ax.set_ylabel('测线方向夹角 β (°)', fontsize=fs)
     return im
 
-
-# ===== 单张: 曲面 =====
-fig = plt.figure(figsize=(9, 6.5))
-ax = fig.add_subplot(111, projection='3d')
-surf = draw_surface(ax)
-fig.colorbar(surf, ax=ax, shrink=0.6, label='W (m)')
-ax.set_title('覆盖宽度 W(L,β) 三维曲面')
-plt.tight_layout()
-plt.savefig(FIG / 'fig_q2_surface.png', dpi=300, bbox_inches='tight')
-plt.close(fig)
-
-# ===== 单张: 热力图 =====
-fig, ax = plt.subplots(figsize=(9, 7))
-im = draw_heatmap(ax)
-fig.colorbar(im, ax=ax, label='覆盖宽度 W (m)')
-ax.set_title('覆盖宽度 W(L,β) 热力图')
-plt.tight_layout()
-plt.savefig(FIG / 'fig_q2_heatmap.png', dpi=300, bbox_inches='tight')
-plt.close(fig)
 
 # ===== 合成图: 左曲面 + 右热力图 =====
 fig = plt.figure(figsize=(15, 6.5))

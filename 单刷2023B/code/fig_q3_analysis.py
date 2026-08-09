@@ -1,9 +1,7 @@
 """
-2023B第三问 补充分析图 (数据类, 数据源: solve_q3.py)
-图1: β方向扫描 — 证明β=90°(沿等深线)总长最短
-图2: 重叠率下界敏感性 — 10%/15%/20% → 36/37/40条
-图3: 三维布设+蛇形航线 — 坡面+条带随水深收窄+折返航迹(垂直放大20×)
-输出: ../fig/fig_q3_beta_scan.png, fig_q3_sensitivity.png, fig_q3_3d.png
+2023B第三问 三维布设+蛇形航线图 (数据源: solve_q3.py)
+图: 彩色海底坡面 + 条带 + 蛇形折返航线(航线在海面)
+输出: ../fig/fig_q3_3d.png
 用法: python fig_q3_analysis.py
 """
 from pathlib import Path
@@ -13,8 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib import cm
 
-from solve_q3 import (layout_west, simulate_beta, width,
-                      XW, XE, W_NS, NM, H0, ta, K)
+from solve_q3 import layout_west, width, XW, XE, W_NS, H0, ta
 
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei']
 plt.rcParams['axes.unicode_minus'] = False
@@ -22,65 +19,7 @@ plt.rcParams['axes.unicode_minus'] = False
 FIG = Path(__file__).resolve().parent.parent / 'fig'
 
 
-def layout_k(k):
-    """间距 = k·W(下一条,较浅); k=0.9/0.85/0.8 ↔ 重叠率10/15/20%"""
-    x1 = (XW + K * H0 / 2) / (1 + K * ta / 2)
-    xs = [x1]
-    while True:
-        xn = (xs[-1] + k * K * H0) / (1 + k * K * ta)
-        xs.append(xn)
-        if xn + width(xn) / 2 >= XE:
-            break
-    return xs
-
-
-# ===== 图1: β 方向扫描 =====
-betas = np.arange(0, 181, 15)
-l90 = simulate_beta(90)
-rels = np.array([simulate_beta(b) / l90 for b in betas])
-
-fig, ax = plt.subplots(figsize=(8, 5))
-ax.plot(betas, rels, 'o-', color='#2e86ab', lw=2, ms=7)
-ax.axvline(90, color='#c0392b', ls='--', lw=1.2)
-ax.annotate('β=90°(沿等深线)\n总长最短', xy=(90, rels.min()),
-            xytext=(106, rels.max() - 0.10),
-            arrowprops=dict(arrowstyle='->', color='#c0392b'),
-            fontsize=12, color='#c0392b', fontweight='bold')
-ax.set_xlabel('测线方向夹角 β (°)')
-ax.set_ylabel('相对测线总长 (β=90°为 1.00)')
-ax.set_title('测线总长随方向 β 变化 (扫描验证)')
-ax.grid(True, alpha=0.3, ls='--')
-plt.tight_layout()
-plt.savefig(FIG / 'fig_q3_beta_scan.png', dpi=300, bbox_inches='tight')
-plt.close(fig)
-print(f'[OK] fig_q3_beta_scan.png  '
-      f'β=0:{rels[0]:.2f} β=45:{rels[3]:.2f} β=90:{rels[6]:.2f} '
-      f'β=180:{rels[-1]:.2f}')
-
-# ===== 图2: 重叠率下界敏感性 =====
-etas = [0.10, 0.15, 0.20]
-ns = [len(layout_k(1 - e)) for e in etas]
-Ls = [n * W_NS / NM for n in ns]
-
-fig, ax = plt.subplots(figsize=(8, 5))
-bars = ax.bar([f'{int(e * 100)}%' for e in etas], Ls, width=0.5,
-              color=['#2e86ab', '#5fa8d3', '#8ec9e0'])
-for b, n, L in zip(bars, ns, Ls):
-    ax.text(b.get_x() + b.get_width() / 2, L + 1.2,
-            f'{n}条\n{L:.0f}海里', ha='center', fontsize=12,
-            fontweight='bold', color='#1f4e79')
-ax.set_ylabel('测线总长 (海里)')
-ax.set_xlabel('重叠率设计下界')
-ax.set_title('重叠率下界敏感性: 每放宽5%约增1条测线')
-ax.set_ylim(0, max(Ls) * 1.22)
-ax.grid(True, axis='y', alpha=0.3, ls='--')
-plt.tight_layout()
-plt.savefig(FIG / 'fig_q3_sensitivity.png', dpi=300, bbox_inches='tight')
-plt.close(fig)
-print(f'[OK] fig_q3_sensitivity.png  '
-      f'η=10%→{ns[0]}条 η=15%→{ns[1]}条 η=20%→{ns[2]}条')
-
-# ===== 图3: 彩色海底 + 蛇形航线 =====
+# ===== 彩色海底 + 蛇形航线 =====
 ZS = 12.0                    # 垂直放大(坡度可见)
 PAD = 450.0                  # 坡面外扩(容纳折返弧)
 xs = np.array(layout_west())

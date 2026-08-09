@@ -34,7 +34,7 @@ def main(write=False):
     print(f"{'位置/m':>7} {'水深/m':>9} {'W/m':>9} {'重叠率':>8}")
     for i, (x, d, w) in enumerate(zip(X, Ds, Ws)):
         eta = '——' if i == 0 else (
-            f"{1 - D_LINE/Ws[i-1]:.2%}" if 1 - D_LINE/Ws[i-1] >= 0 else '无重叠')
+            f"{1 - D_LINE/Ws[i]:.2%}" if 1 - D_LINE/Ws[i] >= 0 else '无重叠')
         print(f"{x:>7} {d:>9.2f} {w:>9.2f} {eta:>8}")
 
     if write:
@@ -45,7 +45,7 @@ def main(write=False):
             ws.cell(2, i + 2).value = round(Ds[i], 2)
             ws.cell(3, i + 2).value = round(Ws[i], 2)
             if i > 0:
-                e = 1 - D_LINE / Ws[i - 1]
+                e = 1 - D_LINE / Ws[i]
                 ws.cell(4, i + 2).value = '无重叠' if e < 0 else f'{e:.2%}'
         wb.save(RESULT)
         print(f'[OK] 写入 {RESULT}')

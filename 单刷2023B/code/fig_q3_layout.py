@@ -1,7 +1,7 @@
 """
-2023B第三问 测线布设与完整航迹图 (数据源: solve_q3.py 最终方案)
-图1: 布局图 (36条南北向测线); 图2: 完整航迹图 (蛇形折返, 含转弯段)
-输出: ../fig/fig_q3_layout.png, ../fig/fig_q3_track.png
+2023B第三问 完整航迹图 (数据源: solve_q3.py 最终方案)
+图: 蛇形折返航迹 (36条南北向测线 + 转弯段, 含起点终点)
+输出: ../fig/fig_q3_track.png
 用法: python fig_q3_layout.py
 """
 from pathlib import Path
@@ -42,15 +42,6 @@ def draw_bg(ax):
     return im
 
 
-def draw_layout(ax):
-    """36条测线 + 每4条一个航向箭头"""
-    for i, x in enumerate(xs):
-        ax.plot([x, x], [-W_NS / 2, W_NS / 2], 'k-', lw=0.9)
-        if i % 4 == 0:
-            ax.annotate('', xy=(x, -W_NS / 2 + 260), xytext=(x, W_NS / 2 - 260),
-                        arrowprops=dict(arrowstyle='->', color='k', lw=1.2))
-
-
 def draw_track(ax):
     """测线 + 蛇形折返弧(北上半圆/南下半圆) + 起终点 + 图例"""
     for i, x in enumerate(xs):
@@ -77,26 +68,7 @@ def draw_track(ax):
 
 
 if __name__ == '__main__':
-    # ===== 图1: 布局图 =====
-    fig, ax = plt.subplots(figsize=(10, 5.5))
-    im = draw_bg(ax)
-    draw_layout(ax)
-    fig.text(0.015, 0.985, '西(深)', ha='left', va='top', fontsize=11,
-             color='navy', fontweight='bold')
-    fig.text(0.985, 0.985, f'{len(xs)}条 / 总长{len(xs) * W_NS / NM:.0f}海里',
-             ha='right', va='top', fontsize=11, color='dimgray',
-             fontweight='bold')
-    fig.text(0.985, 0.955, '东(浅)', ha='right', va='top', fontsize=11,
-             color='darkred', fontweight='bold')
-    ax.set_title(f'第三问测线布设 ({len(xs)}条, 重叠率10%)', fontsize=13)
-    cbar = fig.colorbar(im, ax=ax, pad=0.01)
-    cbar.set_label('水深 (m)')
-    plt.tight_layout()
-    plt.savefig(FIG / 'fig_q3_layout.png', dpi=300, bbox_inches='tight')
-    plt.close(fig)
-    print(f'[OK] {FIG / "fig_q3_layout.png"} ({len(xs)}条)')
-
-    # ===== 图2: 完整航迹图 =====
+    # ===== 完整航迹图 =====
     fig, ax = plt.subplots(figsize=(10, 5.5))
     im = draw_bg(ax)
     draw_track(ax)
